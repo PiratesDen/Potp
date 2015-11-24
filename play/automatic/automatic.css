@@ -27,6 +27,7 @@ div{
 #canvas{
 	display: block;
 	float:left;
+    
 }
 #stats{
 	width:400px; height:100%;

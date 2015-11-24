@@ -528,7 +528,6 @@ function ReadLog() {
 
        reader.onloadend = function(e) {
          var txtArea = document.getElementById("ta_log");
-         txtArea.visibility = "visible";
          txtArea.value = this.result;
          //.body.appendChild(txtArea);
        };
