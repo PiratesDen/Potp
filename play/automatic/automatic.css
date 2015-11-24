@@ -77,6 +77,31 @@ div{
 	top:3px;
 }
 
+.LogButton{
+	background: url(../img/logButton.png);
+	width:195px;
+	height:52px;
+
+	cursor: pointer;
+	float:left;
+
+	position: relative;
+	top:0px;
+
+	-webkit-transition: top 0.1s linear;
+    -moz-transition: top 0.1s linear;
+    -ms-transition: top 0.1s linear;
+    -o-transition: top 0.1s linear;
+    transition: top 0.1s linear;
+
+}
+.LogButton:hover{
+	top:-5px;
+}
+.LogButton:active{
+	top:3px;
+}
+
 #reset{ background-position: 0 -104px; }
 #reset:hover{ background-position: 0 -156px; }
 
