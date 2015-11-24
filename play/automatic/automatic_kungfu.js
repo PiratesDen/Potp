@@ -320,6 +320,7 @@ var tmp_stats = document.createElement("canvas");
 tmp_stats.width = stats_canvas.width;
 tmp_stats.height = stats_canvas.height;
 
+var curSegregation = -1;
 window.writeStats = function(){
 
 	if(!draggables || draggables.length==0) return;
@@ -345,7 +346,19 @@ window.writeStats = function(){
 
 	// AVG -> SEGREGATION
 	var segregation = (avg-0.5)*2;
-	if(segregation<0) segregation=0;
+    if(segregation<0) segregation=0;
+    if(curSegregation != -1){
+        console.log(curSegregation + ' ' + segregation);
+        if(Math.abs(segregation - curSegregation) >= .015){
+            //slow down simulation
+            animationSpeed = 100000000;
+            console.log(' threshold hit\n');
+        }
+        else {
+            console.log('\n');
+        }
+    }
+    curSegregation = segregation;
 
 	// Graph it
 	stats_ctx.fillStyle = "#cc2727";
@@ -422,11 +435,26 @@ function step(){
 	// Go to a random empty spot
 	var spot = empties[Math.floor(Math.random()*empties.length)];
 	if(!spot) return;
-	shaker.gotoX = spot.x;
-	shaker.gotoY = spot.y;
+    PolygonAnimationSpeed(shaker, spot);
 
 }
-
+var distanceX; var xAnimatedStep;
+var distanceY; var yAnimatedStep;
+var animationSpeed = 1; // 1,000,000,000
+function PolygonAnimationSpeed(shaker, spot){
+    distanceX = shaker.x - spot.x;
+	distanceY = shaker.y - spot.y;
+    xAnimatedStep = distanceX = distanceX / animationSpeed;
+    yAnimatedStep = distanceY = distanceY / animationSpeed;
+    for(var i = animationSpeed; i > 0; --i){ 
+        shaker.gotoX = distanceX; distanceX = distanceX + xAnimatedStep;
+        shaker.gotoY = distanceY; distanceY = distanceY + yAnimatedStep;
+    }
+    shaker.gotoX = spot.x;
+	shaker.gotoY = spot.y;
+    //reset to normal animation speed
+    animationSpeed = 1;
+}
 ////////////////////
 // ANIMATION LOOP //
 ////////////////////
