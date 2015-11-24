@@ -11,7 +11,8 @@ var PEEP_SIZE = 30;
 var GRID_SIZE = 20;
 var DIAGONAL_SQUARED = (TILE_SIZE+5)*(TILE_SIZE+5) + (TILE_SIZE+5)*(TILE_SIZE+5);
 
-
+var INFORMED = false;
+var informedLog = [];
 
 window.RATIO_TRIANGLES = 0.5;
 window.RATIO_SQUARES = 0.5;
@@ -47,6 +48,7 @@ function Draggable(x,y){
 	self.y = y;
 	self.gotoX = x;
 	self.gotoY = y;
+    self.stepped = false;
 
 	var offsetX, offsetY;
 	var pickupX, pickupY;
@@ -190,19 +192,60 @@ function Draggable(x,y){
 		var img;
 		if(self.color=="triangle"){
 			if(self.shaking){
+                
+                if(INFORMED === true && self.stepped === true){
+                    informedLog.push("SAD", "SUCCESS");
+                    self.stepped = false;
+                }
 				img = images.sadTriangle;
+                
 			}else if(self.bored){
-				img = images.mehTriangle;
-			}else{
-				img = images.yayTriangle;
+                
+                if(INFORMED === true && self.stepped === true){
+                    informedLog.push("BORED", "SUCCESS");
+                    self.stepped = false;
+                }
+				
+                img = images.mehTriangle;
+			
+            }else{
+                
+                if(INFORMED === true && self.stepped === true){
+                    informedLog.push("HAPPY", "SUCCESS");
+                    self.stepped = false;
+                }
+				
+                img = images.yayTriangle;
+                
 			}
 		}else{
 			if(self.shaking){
+                
+                if(INFORMED === true && self.stepped === true){
+                    informedLog.push("SAD", "SUCCESS");
+                    self.stepped = false;
+                }
+                
 				img = images.sadSquare;
+                
 			}else if(self.bored){
+                
+                if(INFORMED === true && self.stepped === true){
+                    informedLog.push("BORED", "SUCCESS");
+                    self.stepped = false;
+                }
+                
 				img = images.mehSquare;
+                
 			}else{
+                
+                if(INFORMED === true && self.stepped === true){
+                    informedLog.push("HAPPY", "SUCCESS");
+                    self.stepped = false;
+                }
+                
 				img = images.yaySquare;
+                
 			}
 		}
 
@@ -232,7 +275,8 @@ window.reset = function(){
 		offset:0
 	};
 	START_SIM = false;
-
+    INFORMED = false;
+    
 	stats_ctx.clearRect(0,0,stats_canvas.width,stats_canvas.height);
 
 	draggables = [];
@@ -291,6 +335,9 @@ window.render = function(){
 			START_SIM = false;
 			console.log("DONE");
 			writeStats();
+            
+            if(INFORMED === true)
+                writeLog("INFORMED");
 		}
 	}else if(START_SIM){
 		
@@ -367,6 +414,29 @@ window.writeStats = function(){
 
 }
 
+window.writeLog = function(logType){
+    
+    if(logType === "INFORMED"){
+        
+        // Loop through the log array
+        for(var i = 0; i < informedLog.length; i = i + 3){
+            
+            // If a polygon started out sad...
+            if(informedLog[i] === "SAD"){
+                
+                // ...the move better be registered as a success.
+                if(informedLog[i+2] !== "SUCCESS"){
+                    window.alert("Failure for INFORMED Search:\nSAD polygon move not registered as INFORMED.\n");
+                    return;
+                }
+            }
+        }
+    }
+    else{
+        window.alert("Unrecognized Log Type: " + logType);
+    }
+}
+
 var doneAnimFrame = 0;
 var doneBuffer = 30;
 function isDone(){
@@ -375,6 +445,7 @@ function isDone(){
 		var d = draggables[i];
 		if(d.shaking) return false;
 	}
+    
 	return true;
 }
 
@@ -418,13 +489,17 @@ function step(){
 
 		}
 	}
-
-	// Go to a random empty spot
-	var spot = empties[Math.floor(Math.random()*empties.length)];
-	if(!spot) return;
-	shaker.gotoX = spot.x;
-	shaker.gotoY = spot.y;
-
+    
+    // Go to a random empty spot
+    var spot = empties[Math.floor(Math.random()*empties.length)];
+    if(!spot) return;
+    shaker.gotoX = spot.x;
+    shaker.gotoY = spot.y;
+    shaker.stepped = true;
+    
+            // If INFORMED Search is on, log that the next polygon to move started out sad.
+        if(INFORMED === true)
+            informedLog.push("SAD");
 }
 
 ////////////////////

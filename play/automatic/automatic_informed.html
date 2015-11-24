@@ -14,10 +14,10 @@
 				<div id="stats_text"></div>
 			</div>
 
-			<div class="ui" id="moving" onclick="START_SIM=!START_SIM; doneBuffer = 60; window.writeStats()"></div>
+			<div class="ui" id="moving" onclick="START_SIM=!START_SIM; doneBuffer = 60; window.writeStats(); INFORMED=true"></div>
 			<div class="ui" id="reset" onclick="reset()" style="margin-left:9px"></div>
             
-            <!-- INFORMED EDIT START -->
+            <!-- INFORMED EDIT START 
             <form>
                 <input type="checkbox" onclick="START_SIM=!START_SIM; doneBuffer = 60; window.writeStats()">Informed Search
             </form>
