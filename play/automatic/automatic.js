@@ -11,12 +11,15 @@ var PEEP_SIZE = 30;
 var GRID_SIZE = 20;
 var DIAGONAL_SQUARED = (TILE_SIZE+5)*(TILE_SIZE+5) + (TILE_SIZE+5)*(TILE_SIZE+5);
 
+var DEBUGGING = true; // Set to true when testing.
+Math.seed = 6; // seed for test cases
 
+var INFORMED = false;
+var informedLog = [];
 
 window.RATIO_TRIANGLES = 0.5;
 window.RATIO_SQUARES = 0.5;
 window.EMPTINESS = 0.2;
-
 
 var assetsLeft = 0;
 var onImageLoaded = function(){
@@ -40,6 +43,16 @@ addAsset("sadSquare","../img/sad_square.png");
 var IS_PICKING_UP = false;
 var lastMouseX, lastMouseY;
 
+Math.seededRandom = function(max, min) {
+    max = max || 1;
+    min = min || 0;
+ 
+    Math.seed = (Math.seed * 9301 + 49297) % 233280;
+    var rnd = Math.seed / 233280;
+ 
+    return min + rnd * (max - min);
+}
+
 function Draggable(x,y){
 	
 	var self = this;
@@ -47,6 +60,7 @@ function Draggable(x,y){
 	self.y = y;
 	self.gotoX = x;
 	self.gotoY = y;
+    self.stepped = false;
 
 	var offsetX, offsetY;
 	var pickupX, pickupY;
@@ -190,19 +204,60 @@ function Draggable(x,y){
 		var img;
 		if(self.color=="triangle"){
 			if(self.shaking){
+                
+                if(INFORMED === true && self.stepped === true){
+                    informedLog.push("SAD", "SUCCESS");
+                    self.stepped = false;
+                }
 				img = images.sadTriangle;
+                
 			}else if(self.bored){
-				img = images.mehTriangle;
-			}else{
-				img = images.yayTriangle;
+                
+                if(INFORMED === true && self.stepped === true){
+                    informedLog.push("BORED", "SUCCESS");
+                    self.stepped = false;
+                }
+				
+                img = images.mehTriangle;
+			
+            }else{
+                
+                if(INFORMED === true && self.stepped === true){
+                    informedLog.push("HAPPY", "SUCCESS");
+                    self.stepped = false;
+                }
+				
+                img = images.yayTriangle;
+                
 			}
 		}else{
 			if(self.shaking){
+                
+                if(INFORMED === true && self.stepped === true){
+                    informedLog.push("SAD", "SUCCESS");
+                    self.stepped = false;
+                }
+                
 				img = images.sadSquare;
+                
 			}else if(self.bored){
+                
+                if(INFORMED === true && self.stepped === true){
+                    informedLog.push("BORED", "SUCCESS");
+                    self.stepped = false;
+                }
+                
 				img = images.mehSquare;
+                
 			}else{
+                
+                if(INFORMED === true && self.stepped === true){
+                    informedLog.push("HAPPY", "SUCCESS");
+                    self.stepped = false;
+                }
+                
 				img = images.yaySquare;
+                
 			}
 		}
 
@@ -227,25 +282,45 @@ var draggables;
 var STATS;
 window.reset = function(){
 
+    for(var count = 0; count < 10; count++){
+        console.log(Math.seededRandom(1,0));
+    }
+
+    
 	STATS = {
 		steps:0,
 		offset:0
 	};
 	START_SIM = false;
-
+    INFORMED = false;
+    
 	stats_ctx.clearRect(0,0,stats_canvas.width,stats_canvas.height);
 
 	draggables = [];
-	for(var x=0;x<GRID_SIZE;x++){
-		for(var y=0;y<GRID_SIZE;y++){
-			if(Math.random()<(1-window.EMPTINESS)){
-				var draggable = new Draggable((x+0.5)*TILE_SIZE, (y+0.5)*TILE_SIZE);
-				draggable.color = (Math.random()<window.RATIO_TRIANGLES) ? "triangle" : "square";
-				draggables.push(draggable);
-			}
-		}
-	}
-
+    
+    if(DEBUGGING === false){
+        for(var x=0;x<GRID_SIZE;x++){
+            for(var y=0;y<GRID_SIZE;y++){
+                if(Math.random()<(1-window.EMPTINESS)){
+                    var draggable = new Draggable((x+0.5)*TILE_SIZE, (y+0.5)*TILE_SIZE);
+                    draggable.color = (Math.random()<window.RATIO_TRIANGLES) ? "triangle" : "square";
+                    draggables.push(draggable);
+                }
+            }
+        }
+    }
+    else{
+        for(var x=0;x<GRID_SIZE;x++){
+            for(var y=0;y<GRID_SIZE;y++){
+                if(Math.seededRandom(1,0)<(1-window.EMPTINESS)){
+                    var draggable = new Draggable((x+0.5)*TILE_SIZE, (y+0.5)*TILE_SIZE);
+                    draggable.color = (Math.seededRandom(1,0)<window.RATIO_TRIANGLES) ? "triangle" : "square";
+                    draggables.push(draggable);
+                }
+            }
+        }
+    }
+    
 	// Write stats for first time
 	for(var i=0;i<draggables.length;i++){
 		draggables[i].update();
@@ -255,7 +330,7 @@ window.reset = function(){
 }
 
 window.render = function(){
-
+    
 	if(assetsLeft>0 || !draggables) return;
 	
 	// Is Stepping?
@@ -291,6 +366,9 @@ window.render = function(){
 			START_SIM = false;
 			console.log("DONE");
 			writeStats();
+            
+            if(INFORMED === true)
+                writeLog("INFORMED");
 		}
 	}else if(START_SIM){
 		
@@ -367,6 +445,40 @@ window.writeStats = function(){
 
 }
 
+window.writeLog = function(logType){
+    
+    if(logType === "INFORMED"){
+        
+        var stepNum = 1;
+        
+        // Loop through the log array
+        for(var i = 0; i < informedLog.length; i = i + 3){
+            
+            // Print each row to the console
+            console.log("Step " + stepNum + ": " + informedLog[i] + " " + informedLog[i+1] + " " + informedLog[i+2]);
+            
+            // If a polygon started out sad...
+            if(informedLog[i] === "SAD"){
+                
+                // ...the move better be registered as a success.
+                if(informedLog[i+2] !== "SUCCESS"){
+                    window.alert("Failure for INFORMED Search:\nSAD polygon move not registered as INFORMED.\n");
+                    return;
+                }
+                
+                stepNum++;
+            }
+        }
+        
+        // If debugging is on, check a test case
+        if(DEBUGGING === true)
+            informedTestCase();
+    }
+    else{
+        window.alert("Unrecognized Log Type: " + logType);
+    }
+}
+
 var doneAnimFrame = 0;
 var doneBuffer = 30;
 function isDone(){
@@ -375,6 +487,7 @@ function isDone(){
 		var d = draggables[i];
 		if(d.shaking) return false;
 	}
+    
 	return true;
 }
 
@@ -389,7 +502,12 @@ function step(){
 
 	// Pick a random shaker
 	if(shaking.length==0) return;
-	var shaker = shaking[Math.floor(Math.random()*shaking.length)];
+    if(DEBUGGING === false){
+	   var shaker = shaking[Math.floor(Math.random()*shaking.length)];
+    }
+    else{
+        var shaker = shaking[Math.floor(Math.seededRandom(1,0)*shaking.length)];
+    }
 
 	// Go through every spot, get all empty ones
 	var empties = [];
@@ -418,13 +536,204 @@ function step(){
 
 		}
 	}
+    
+    // Go to a random empty spot
+    if(DEBUGGING === false){
+        var spot = empties[Math.floor(Math.random()*empties.length)];
+        if(!spot) return;
+        shaker.gotoX = spot.x;
+        shaker.gotoY = spot.y;
+        shaker.stepped = true;
 
-	// Go to a random empty spot
-	var spot = empties[Math.floor(Math.random()*empties.length)];
-	if(!spot) return;
-	shaker.gotoX = spot.x;
-	shaker.gotoY = spot.y;
+        // If INFORMED Search is on, log that the next polygon to move started out sad.
+        if(INFORMED === true)
+            informedLog.push("SAD");
+    }
+    else{
+        var spot = empties[Math.floor(Math.seededRandom(1,0)*empties.length)];
+        if(!spot) return;
+        shaker.gotoX = spot.x;
+        shaker.gotoY = spot.y;
+        shaker.stepped = true;
 
+        // If INFORMED Search is on, log that the next polygon to move started out sad.
+        if(INFORMED === true)
+            informedLog.push("SAD");
+    }
+}
+
+var informedTestCaseOutput = [
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "BORED", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "SAD", "SUCCESS",
+"SAD", "HAPPY", "SUCCESS"];
+
+window.informedTestCase = function(){
+    
+    // Check if the output we got is the same as the expected output
+    for(var i = 0; i < informedLog.length; i++){
+        if(informedLog[i] !== informedTestCaseOutput[i]){
+            console.log("INFORMED test case failed: " + informedLog[i] + " !== " + informedTestCaseOutput[i]);
+            return;
+        }
+    }
+    
+    console.log("INFORMED test case succeeded.");
 }
 
 ////////////////////
