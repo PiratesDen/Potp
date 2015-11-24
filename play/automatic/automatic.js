@@ -290,6 +290,8 @@ window.reset = function(){
 		}
 	}
 
+    window.crypto.getRandomValues();
+    
 	// Write stats for first time
 	for(var i=0;i<draggables.length;i++){
 		draggables[i].update();
@@ -416,10 +418,15 @@ window.writeStats = function(){
 
 window.writeLog = function(logType){
     
+    var stepNum = 1;
+    
     if(logType === "INFORMED"){
         
         // Loop through the log array
         for(var i = 0; i < informedLog.length; i = i + 3){
+            
+            // Print each row to the console
+            console.log("Step " + stepNum + ": " + informedLog[i] + " " + informedLog[i+1] + " " + informedLog[i+2]);
             
             // If a polygon started out sad...
             if(informedLog[i] === "SAD"){
@@ -429,6 +436,8 @@ window.writeLog = function(logType){
                     window.alert("Failure for INFORMED Search:\nSAD polygon move not registered as INFORMED.\n");
                     return;
                 }
+                
+                stepNum++;
             }
         }
     }
