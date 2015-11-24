@@ -291,6 +291,42 @@ window.render = function(){
 			START_SIM = false;
 			console.log("DONE");
 			writeStats();
+            //PjMc Writing log stats to a file
+            //writeToFs(Log);
+            /*navigator.webkitPersistentStorage.requestQuota (
+                requestedBytes, function(grantedBytes) {  
+                    console.log('we were granted ', grantedBytes, 'bytes');*/
+            window.webkitRequestFileSystem(PERSISTENT, LogBytesGranted, writeToFs, errorHandler);
+            
+            //Append to file \log.txt
+            function writeToFs(fs) {
+
+                fs.root.getFile('log.txt', {create: false}, function(fileEntry) {
+
+                    // Create a FileWriter object for our FileEntry (log.txt).
+                    fileEntry.createWriter(function(fileWriter) {
+                        
+                        fileWriter.seek(fileWriter.length); // Start write position at EOF.
+                        
+                        fileWriter.onwriteend = function(e) {
+                            console.log('Write completed.');
+                        };
+
+                        fileWriter.onerror = function(e) {
+                            console.log('Write failed: ' + e.toString());
+                        };
+        
+                        // Create a new Blob and write it to log.txt.
+                         var blob = new Blob(['Lorem Ipsum'], {type: 'text/plain'});
+
+                        fileWriter.write(blob);
+       
+                    }, errorHandler);
+
+                }, errorHandler);
+
+            }
+
 		}
 	}else if(START_SIM){
 		
@@ -375,7 +411,7 @@ function isDone(){
 		var d = draggables[i];
 		if(d.shaking) return false;
 	}
-	return true;
+    return true;
 }
 
 function step(){
@@ -445,4 +481,45 @@ window.IS_IN_SIGHT = false;
 
 window.onload=function(){
 	reset();
+}
+
+// The following code has been adapted from... 
+// @Author: Eric Bidelman 
+// @PublicationDate: 1/4/11
+// @Website: http://www.html5rocks.com/en/tutorials/file/filesystem/
+// @ModifiedBy: mcpat1@umbc.edu
+// @ModificationDate: 11/23/15 
+// @Description: Implement a filesystem interface by requesting a PERSISTENT temp storage within the chrome browser
+var requestedBytes = 1024*1024*42; 
+var LogBytesGranted = null;
+var Log = null; // filesystem handle
+var POTP_path = 'POTP'
+
+function onInitFs(fs) {
+    
+    fs.root.getFile('log.txt', {create: true, exclusive: false}, function(fileEntry) {
+
+        //fileEntry.isFile === true
+        //fileEntry.name == 'log.txt'
+        //fileEntry.fullPath == '/log.txt'
+
+    }, errorHandler);
+        
+    console.log('Opened file system: ' + fs.name);
+    Log = fs; //assign the filesystem handle to Log variable
+}
+// PjMc
+navigator.webkitPersistentStorage.requestQuota (
+    requestedBytes, function(grantedBytes) {  
+        console.log('we were granted ', grantedBytes, 'bytes');
+        //set global var of LogSystem
+        LogBytesGranted = grantedBytes;
+        
+         window.webkitRequestFileSystem(PERSISTENT, grantedBytes, onInitFs, errorHandler); 
+
+    }, function(e) { console.log('Error', e); }
+);
+
+function errorHandler(e) {
+  console.log(e.name + ': ' + e.value);
 }
