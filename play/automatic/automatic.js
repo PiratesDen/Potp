@@ -502,11 +502,12 @@ function step(){
 
 	// Pick a random shaker
 	if(shaking.length==0) return;
+    var shaker = null;
     if(DEBUGGING === false){
-	   var shaker = shaking[Math.floor(Math.random()*shaking.length)];
+        shaker = shaking[Math.floor(Math.random()*shaking.length)];
     }
     else{
-        var shaker = shaking[Math.floor(Math.seededRandom(1,0)*shaking.length)];
+        shaker = shaking[Math.floor(Math.seededRandom(1,0)*shaking.length)];
     }
 
 	// Go through every spot, get all empty ones
