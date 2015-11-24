@@ -291,9 +291,6 @@ window.render = function(){
 			START_SIM = false;
 			console.log("DONE");
 			writeStats();
-            //PjMc Writing log stats to a file            
-            WriteLog();
-
 		}
 	}else if(START_SIM){
 		
@@ -323,6 +320,7 @@ var tmp_stats = document.createElement("canvas");
 tmp_stats.width = stats_canvas.width;
 tmp_stats.height = stats_canvas.height;
 
+var curSegregation = -1;
 window.writeStats = function(){
 
 	if(!draggables || draggables.length==0) return;
@@ -348,7 +346,19 @@ window.writeStats = function(){
 
 	// AVG -> SEGREGATION
 	var segregation = (avg-0.5)*2;
-	if(segregation<0) segregation=0;
+    if(segregation<0) segregation=0;
+    if(curSegregation != -1){
+        console.log(curSegregation + ' ' + segregation);
+        if(Math.abs(segregation - curSegregation) >= .015){
+            //slow down simulation
+            animationSpeed = 100000000;
+            console.log(' threshold hit\n');
+        }
+        else {
+            console.log('\n');
+        }
+    }
+    curSegregation = segregation;
 
 	// Graph it
 	stats_ctx.fillStyle = "#cc2727";
@@ -378,7 +388,7 @@ function isDone(){
 		var d = draggables[i];
 		if(d.shaking) return false;
 	}
-    return true;
+	return true;
 }
 
 function step(){
@@ -425,11 +435,26 @@ function step(){
 	// Go to a random empty spot
 	var spot = empties[Math.floor(Math.random()*empties.length)];
 	if(!spot) return;
-	shaker.gotoX = spot.x;
-	shaker.gotoY = spot.y;
+    PolygonAnimationSpeed(shaker, spot);
 
 }
-
+var distanceX; var xAnimatedStep;
+var distanceY; var yAnimatedStep;
+var animationSpeed = 1; // 1,000,000,000
+function PolygonAnimationSpeed(shaker, spot){
+    distanceX = shaker.x - spot.x;
+	distanceY = shaker.y - spot.y;
+    xAnimatedStep = distanceX = distanceX / animationSpeed;
+    yAnimatedStep = distanceY = distanceY / animationSpeed;
+    for(var i = animationSpeed; i > 0; --i){ 
+        shaker.gotoX = distanceX; distanceX = distanceX + xAnimatedStep;
+        shaker.gotoY = distanceY; distanceY = distanceY + yAnimatedStep;
+    }
+    shaker.gotoX = spot.x;
+	shaker.gotoY = spot.y;
+    //reset to normal animation speed
+    animationSpeed = 1;
+}
 ////////////////////
 // ANIMATION LOOP //
 ////////////////////
@@ -448,109 +473,4 @@ window.IS_IN_SIGHT = false;
 
 window.onload=function(){
 	reset();
-}
-
-// The following code has been adapted from... 
-// @Author: Eric Bidelman 
-// @PublicationDate: 1/4/11
-// @Website: http://www.html5rocks.com/en/tutorials/file/filesystem/
-// @ModifiedBy: mcpat1@umbc.edu
-// @ModificationDate: 11/23/15 
-// @Description: Implement a filesystem interface by requesting a PERSISTENT temp storage within the chrome browser
-
-//Log Class
-LOG = {
-    requestedBytes:1024*1024*42, 
-    LogBytesGranted:null,
-    Log:null, // filesystem handle
-    numLogs:0
-    };
-
-function createPOTPDir() {
-  LOG.Log.root.getDirectory('POTP', {create: true}, function() {});
-}
-
-function onInitFs(fs) {
-    
-    LOG.Log = fs; //assign the filesystem handle to Log variable
-    createPOTPDir();
-    
-    fs.root.getFile('POTP/log.txt', {create: true, exclusive: true}, function(fileEntry) {
-
-        //fileEntry.isFile === true
-        //fileEntry.name == 'log.txt'
-        //fileEntry.fullPath == '/POTP/log.txt'
-
-    }, errorHandler);
-        
-    console.log('Opened file system: ' + fs.name);
-    
-}
-
-//Append to file /POTP/log.txt
-function WriteLog() {
-
-    LOG.Log.root.getFile('/POTP/log.txt', {create: false}, function(fileEntry) {
-
-        // Create a FileWriter object for our FileEntry (log.txt).
-        fileEntry.createWriter(function(fileWriter) {
-                        
-            fileWriter.seek(fileWriter.length); // Start write position at EOF.
-                    
-            fileWriter.onwriteend = function(e) {
-                console.log('Write completed.');
-                console.log('Log#' + LOG.numLogs);
-                console.log('Total steps: ' + STATS.steps);
-            };
-
-            fileWriter.onerror = function(e) {
-                console.log('Log#' + LOG.numLogs + 'Write failed: ' + e.toString());
-            };
-        
-            // Create a new Blob and write it to log.txt.
-            var blob = new Blob(['Log#' + LOG.numLogs + '\nTotal steps: ' + STATS.steps + '\n'], {type: 'text/plain'}); 
-
-            fileWriter.write(blob);
-       
-        }, errorHandler);
-
-    }, errorHandler);
-}
-
-function ReadLog() {
-
-  LOG.Log.root.getFile('/POTP/log.txt', {}, function(fileEntry) {
-
-    // Get a File object representing the file,
-    // then use FileReader to read its contents.
-    fileEntry.file(function(file) {
-       var reader = new FileReader();
-
-       reader.onloadend = function(e) {
-         var txtArea = document.getElementById("ta_log");
-         txtArea.value = this.result;
-         //.body.appendChild(txtArea);
-       };
-
-       reader.readAsText(file);
-    }, errorHandler);
-
-  }, errorHandler);
-
-}
-
-// PjMc
-navigator.webkitPersistentStorage.requestQuota (
-    LOG.requestedBytes, function(grantedBytes) {  
-        console.log('we were granted ', grantedBytes, 'bytes');
-        //set global var of LogSystem
-        LOG.LogBytesGranted = grantedBytes;
-        
-         window.webkitRequestFileSystem(PERSISTENT, grantedBytes, onInitFs, errorHandler); 
-
-    }, function(e) { console.log('Error', e); }
-);
-
-function errorHandler(e) {
-  console.log(e.name + ': ' + e.value);
 }
