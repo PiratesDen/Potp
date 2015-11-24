@@ -515,6 +515,28 @@ function writeToFs() {
     }, errorHandler);
 }
 
+function readLog() {
+
+  LOG.Log.root.getFile('/POTP/log.txt', {}, function(fileEntry) {
+
+    // Get a File object representing the file,
+    // then use FileReader to read its contents.
+    fileEntry.file(function(file) {
+       var reader = new FileReader();
+
+       reader.onloadend = function(e) {
+         var txtArea = document.getElementById("ta_log");
+         txtArea.value = this.result;
+         //.body.appendChild(txtArea);
+       };
+
+       reader.readAsText(file);
+    }, errorHandler);
+
+  }, errorHandler);
+
+}
+
 // PjMc
 navigator.webkitPersistentStorage.requestQuota (
     LOG.requestedBytes, function(grantedBytes) {  
