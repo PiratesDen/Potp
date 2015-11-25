@@ -11,7 +11,8 @@ var PEEP_SIZE = 30;
 var GRID_SIZE = 20;
 var DIAGONAL_SQUARED = (TILE_SIZE+5)*(TILE_SIZE+5) + (TILE_SIZE+5)*(TILE_SIZE+5);
 
-
+var DEBUGGING = false; // If running test cases, make this true
+var Math.seed = 6; // seed for the Math.seededRandom() function
 
 window.RATIO_TRIANGLES = 0.5;
 window.RATIO_SQUARES = 0.5;
@@ -39,6 +40,16 @@ addAsset("sadSquare","../img/sad_square.png");
 
 var IS_PICKING_UP = false;
 var lastMouseX, lastMouseY;
+
+Math.seededRandom = function(max, min) {
+    max = max || 1;
+    min = min || 0;
+ 
+    Math.seed = (Math.seed * 9301 + 49297) % 233280;
+    var rnd = Math.seed / 233280;
+ 
+    return min + rnd * (max - min);
+}
 
 function Draggable(x,y){
 	
@@ -236,15 +247,28 @@ window.reset = function(){
 	stats_ctx.clearRect(0,0,stats_canvas.width,stats_canvas.height);
 
 	draggables = [];
-	for(var x=0;x<GRID_SIZE;x++){
-		for(var y=0;y<GRID_SIZE;y++){
-			if(Math.random()<(1-window.EMPTINESS)){
-				var draggable = new Draggable((x+0.5)*TILE_SIZE, (y+0.5)*TILE_SIZE);
-				draggable.color = (Math.random()<window.RATIO_TRIANGLES) ? "triangle" : "square";
-				draggables.push(draggable);
-			}
-		}
-	}
+    if(DEBUGGING === false){
+        for(var x=0;x<GRID_SIZE;x++){
+            for(var y=0;y<GRID_SIZE;y++){
+                if(Math.random()<(1-window.EMPTINESS)){
+                    var draggable = new Draggable((x+0.5)*TILE_SIZE, (y+0.5)*TILE_SIZE);
+                    draggable.color = (Math.random()<window.RATIO_TRIANGLES) ? "triangle" : "square";
+                    draggables.push(draggable);
+                }
+            }
+        }
+    }
+    else{
+        for(var x=0;x<GRID_SIZE;x++){
+            for(var y=0;y<GRID_SIZE;y++){
+                if(Math.seededRandom(1,0)<(1-window.EMPTINESS)){
+                    var draggable = new Draggable((x+0.5)*TILE_SIZE, (y+0.5)*TILE_SIZE);
+                    draggable.color = (Math.seededRandom(1,0)<window.RATIO_TRIANGLES) ? "triangle" : "square";
+                    draggables.push(draggable);
+                }
+            }
+        }
+    }
 
 	// Write stats for first time
 	for(var i=0;i<draggables.length;i++){
@@ -392,7 +416,13 @@ function step(){
 
 	// Pick a random shaker
 	if(shaking.length==0) return;
-	var shaker = shaking[Math.floor(Math.random()*shaking.length)];
+	var shaker = null;
+    if(DEBUGGING === false){
+        shaker = shaking[Math.floor(Math.random()*shaking.length)];
+    }
+    else{
+        shaker = shaking[Math.floor(Math.seededRandom(1,0)*shaking.length)];
+    }
 
 	// Go through every spot, get all empty ones
 	var empties = [];
@@ -423,10 +453,20 @@ function step(){
 	}
 
 	// Go to a random empty spot
-	var spot = empties[Math.floor(Math.random()*empties.length)];
-	if(!spot) return;
-	shaker.gotoX = spot.x;
-	shaker.gotoY = spot.y;
+    if(DEBUGGING === false){
+        var spot = empties[Math.floor(Math.random()*empties.length)];
+        if(!spot) return;
+        shaker.gotoX = spot.x;
+        shaker.gotoY = spot.y;
+        shaker.stepped = true;
+    }
+    else{
+        var spot = empties[Math.floor(Math.seededRandom(1,0)*empties.length)];
+        if(!spot) return;
+        shaker.gotoX = spot.x;
+        shaker.gotoY = spot.y;
+        shaker.stepped = true;
+    }
 
 }
 
