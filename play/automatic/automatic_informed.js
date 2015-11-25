@@ -691,7 +691,7 @@ window.informedTestCase = function(){
     // Check if the output we got is the same as the expected output
     for(var i = 0; i < informedLog.length; i++){
         if(informedLog[i] !== informedTestCaseOutput[i]){
-            console.log("INFORMED test case failed: " + i + ":" + informedLog[i] + " !== " + i + ":" + informedTestCaseOutput[i]);
+            console.log("INFORMED test case failed: " + informedLog[i] + " !== " + informedTestCaseOutput[i]);
             return;
         }
     }
