@@ -12,7 +12,7 @@ var GRID_SIZE = 20;
 var DIAGONAL_SQUARED = (TILE_SIZE+5)*(TILE_SIZE+5) + (TILE_SIZE+5)*(TILE_SIZE+5);
 
 var DEBUGGING = false; // If running test cases, make this true
-var Math.seed = 6; // seed for the Math.seededRandom() function
+Math.seed = 6; // seed for the Math.seededRandom() function
 
 window.RATIO_TRIANGLES = 0.5;
 window.RATIO_SQUARES = 0.5;
@@ -501,8 +501,8 @@ window.onload=function(){
 //Log Class
 LOG = {
     requestedBytes:1024*1024*42, 
-    LogBytesGranted:null,
-    Log:null, // filesystem handle
+    LogBytesGranted,
+    Log, // filesystem handle
     numLogs:0
     };
 
