@@ -466,20 +466,20 @@ LOG = {
     numLogs:0
     };
 
-function createPOTPDir() {
+function CreatePOTPDir() {
   LOG.Log.root.getDirectory('POTP', {create: true}, function() {});
 }
 
 function onInitFs(fs) {
     
     LOG.Log = fs; //assign the filesystem handle to Log variable
-    createPOTPDir();
+    CreatePOTPDir();
     
     fs.root.getFile('POTP/log.txt', {create: true, exclusive: true}, function(fileEntry) {
 
-        //fileEntry.isFile === true
-        //fileEntry.name == 'log.txt'
-        //fileEntry.fullPath == '/POTP/log.txt'
+        fileEntry.isFile === true
+        fileEntry.name == 'log.txt'
+        fileEntry.fullPath == '/POTP/log.txt'
 
     }, errorHandler);
         
