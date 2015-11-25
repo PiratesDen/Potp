@@ -281,11 +281,6 @@ window.START_SIM = false;
 var draggables;
 var STATS;
 window.reset = function(){
-
-    for(var count = 0; count < 10; count++){
-        console.log(Math.seededRandom(1,0));
-    }
-
     
 	STATS = {
 		steps:0,
@@ -502,12 +497,12 @@ function step(){
 
 	// Pick a random shaker
 	if(shaking.length==0) return;
-    var shaker = null;
+    //var shaker = null;
     if(DEBUGGING === false){
-        shaker = shaking[Math.floor(Math.random()*shaking.length)];
+        var shaker = shaking[Math.floor(Math.random()*shaking.length)];
     }
     else{
-        shaker = shaking[Math.floor(Math.seededRandom(1,0)*shaking.length)];
+        var shaker = shaking[Math.floor(Math.seededRandom(1,0)*shaking.length)];
     }
 
 	// Go through every spot, get all empty ones
